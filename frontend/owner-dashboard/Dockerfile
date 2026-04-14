@@ -7,9 +7,9 @@ RUN npm install
 COPY . .
 
 # MUST BE DECLARED DURING BUILD STAGE FOR VITE
-ENV VITE_API_URL=http://13.126.122.249:5000
+ENV VITE_API_URL=http://13.201.55.17:5000
 ENV VITE_AWS_REGION=ap-south-1
-ENV VITE_AWS_S3_BUCKET_NAME=cloud-project-s3-unique
+ENV VITE_AWS_S3_BUCKET_NAME=contactless-cafe-bucket
 
 RUN npm run build
 
