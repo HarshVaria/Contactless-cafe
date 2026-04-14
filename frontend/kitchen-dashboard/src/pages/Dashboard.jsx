@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getOrders, updateOrderStatus } from '../services/api';
+import InventoryOverride from '../components/InventoryOverride';
 import { 
   ChefHat, 
   LogOut, 
@@ -10,13 +11,15 @@ import {
   UtensilsCrossed, 
   CheckCircle2,
   Receipt,
-  Loader2
+  Loader2,
+  Scale
 } from 'lucide-react';
 
 const Dashboard = ({ onLogout }) => {
   const [allOrders, setAllOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showOverride, setShowOverride] = useState(false);
   const [filterStatus, setFilterStatus] = useState('Pending');
   const navigate = useNavigate();
 
@@ -121,6 +124,13 @@ const Dashboard = ({ onLogout }) => {
             >
               <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
               <span className="hidden sm:inline">{isRefreshing ? 'Syncing...' : 'Sync Now'}</span>
+            </button>
+            <button
+              onClick={() => setShowOverride(true)}
+              className="flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-700 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            >
+               <Scale className="w-4 h-4" />
+               <span className="hidden sm:inline">Check Stock</span>
             </button>
             <button
               onClick={handleLogout}
@@ -303,6 +313,8 @@ const Dashboard = ({ onLogout }) => {
           </button>
         </div>
       )}
+
+      {showOverride && <InventoryOverride onClose={() => setShowOverride(false)} />}
 
       <style>{`
         .hide-scrollbar::-webkit-scrollbar {

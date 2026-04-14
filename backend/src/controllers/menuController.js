@@ -58,6 +58,10 @@ exports.getMenuItem = async (req, res) => {
 // @access  Private (Owner only)
 exports.createMenuItem = async (req, res) => {
   try {
+    if (req.file) {
+      req.body.image = req.file.location; // S3 URL
+    }
+    
     const menuItem = await MenuItem.create(req.body);
 
     res.status(201).json({
@@ -78,6 +82,10 @@ exports.createMenuItem = async (req, res) => {
 // @access  Private (Owner only)
 exports.updateMenuItem = async (req, res) => {
   try {
+    if (req.file) {
+      req.body.image = req.file.location; // S3 URL
+    }
+
     const menuItem = await MenuItem.findByIdAndUpdate(
       req.params.id,
       req.body,

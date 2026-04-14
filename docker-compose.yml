@@ -1,9 +1,8 @@
 version: '3.8'
 
 services:
-  # MongoDB Local Database (will be replaced by MongoDB Atlas in cloud)
   mongodb:
-    image: mongo:7.0
+    image: mongo:6
     container_name: cafe-mongodb
     restart: always
     ports:
@@ -11,34 +10,70 @@ services:
     environment:
       MONGO_INITDB_DATABASE: contactless-cafe
     volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
+      - mongo_data:/data/db
+    networks:
+      - cafe-network
+  backend:
+    build:
+      context: ./backend
+    container_name: cafe-backend
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      # Provide MongoDB Atlas URI here for production!
+      - MONGO_URI=${MONGO_URI:-mongodb://mongodb:27017/contactless-cafe}
+      - JWT_SECRET=${JWT_SECRET:-cafe_super_secret_key_prod_2024}
+      - JWT_EXPIRE=7d
+      # AWS ENV VARS
+      - AWS_REGION=${AWS_REGION}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
+    ports:
+      - "5000:5000"
     networks:
       - cafe-network
 
-  # MongoDB Express - Web UI to view database
-  mongo-express:
-    image: mongo-express:latest
-    container_name: cafe-mongo-express
+  customer-app:
+    build:
+      context: ./frontend/customer-app
+    container_name: cafe-customer-app
     restart: always
     ports:
-      - "8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_SERVER: mongodb
-      ME_CONFIG_MONGODB_PORT: 27017
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+      - "80:80"
     depends_on:
-      - mongodb
+      - backend
     networks:
       - cafe-network
 
-volumes:
-  mongodb_data:
-    driver: local
-  mongodb_config:
-    driver: local
+  kitchen-dashboard:
+    build:
+      context: ./frontend/kitchen-dashboard
+    container_name: cafe-kitchen-dashboard
+    restart: always
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    networks:
+      - cafe-network
+
+  owner-dashboard:
+    build:
+      context: ./frontend/owner-dashboard
+    container_name: cafe-owner-dashboard
+    restart: always
+    ports:
+      - "8082:80"
+    depends_on:
+      - backend
+    networks:
+      - cafe-network
 
 networks:
   cafe-network:
     driver: bridge
+
+volumes:
+  mongo_data:

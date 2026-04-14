@@ -31,7 +31,18 @@ const menuItemSchema = new mongoose.Schema({
   preparationTime: {
     type: Number,
     default: 15
-  }
+  },
+  recipe: [{
+    ingredient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Ingredient'
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: 0
+    }
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('MenuItem', menuItemSchema);

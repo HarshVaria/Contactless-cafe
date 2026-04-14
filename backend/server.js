@@ -73,12 +73,14 @@ const menuRoutes = require('./src/routes/menuRoutes');
 const orderRoutes = require('./src/routes/orderRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const analyticsRoutes = require('./src/routes/analyticsRoutes');
+const inventoryRoutes = require('./src/routes/inventoryRoutes');
 
 // Mount Routes
 app.use('/api/menu', menuRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/inventory', inventoryRoutes);
 
 // Health Check
 app.get('/api/health', (req, res) => {

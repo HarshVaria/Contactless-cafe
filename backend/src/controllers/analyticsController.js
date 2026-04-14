@@ -142,3 +142,88 @@ exports.getTableOrders = async (req, res) => {
     });
   }
 };
+// @desc    Get ingredient consumption and forecast
+// @route   GET /api/analytics/ingredients
+// @access  Private (Owner)
+exports.getIngredientUsage = async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - days);
+
+    // Only look at Served orders 
+    const orders = await Order.find({ 
+      status: 'Served',
+      createdAt: { $gte: pastDate }
+    });
+
+    const Ingredient = require('../models/Ingredient');
+    const allIngredients = await Ingredient.find({});
+    
+    // Initialize usage tracking map
+    const usageMap = {};
+    for (const ing of allIngredients) {
+      usageMap[ing._id.toString()] = {
+        name: ing.name,
+        unit: ing.unit,
+        currentStock: ing.currentStock,
+        threshold: ing.lowStockThreshold,
+        consumedAmount: 0
+      };
+    }
+
+    // Tally up consumption from orders
+    for (const order of orders) {
+      if (order.ingredientsDeducted) {
+        // If they were deducted we can calculate how much using the recipe 
+        for (const item of order.items) {
+          const menuItem = await MenuItem.findById(item.menuItem);
+          if (menuItem && menuItem.recipe && menuItem.recipe.length > 0) {
+            for (const rec of menuItem.recipe) {
+              const ingId = rec.ingredient.toString();
+              if (usageMap[ingId]) {
+                usageMap[ingId].consumedAmount += (rec.amount * item.quantity);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Project usage for the next 7 days based on the daily average of the selected period
+    // e.g. consumedAmount / 30 = daily average -> multiply by 7 = next week forecast
+    const analyticsData = Object.values(usageMap).map(ing => {
+      const dailyAverage = ing.consumedAmount / days;
+      const weeklyForecast = dailyAverage * 7;
+      const status = ing.currentStock < weeklyForecast 
+        ? 'critical_need' 
+        : (ing.currentStock < ing.threshold ? 'low_stock' : 'healthy');
+
+      return {
+        ...ing,
+        dailyAverage: parseFloat(dailyAverage.toFixed(2)),
+        weeklyForecast: parseFloat(weeklyForecast.toFixed(2)),
+        status
+      };
+    });
+
+    // Sort by most critical first
+    const sortedData = analyticsData.sort((a, b) => {
+      if (a.status === 'critical_need') return -1;
+      if (b.status === 'critical_need') return 1;
+      return a.currentStock - b.currentStock;
+    });
+
+    res.status(200).json({
+      success: true,
+      timeframeDays: parseInt(days),
+      data: sortedData
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};

@@ -4,6 +4,7 @@ import QRGenerator from '../components/QRGenerator';
 import MenuManagement from '../components/MenuManagement';
 import Analytics from '../components/Analytics';
 import OrderHistory from '../components/OrderHistory';
+import Inventory from '../components/Inventory';
 import { 
   BarChart3, 
   QrCode, 
@@ -11,7 +12,8 @@ import {
   ShoppingBag, 
   LogOut, 
   Store, 
-  UserCircle 
+  UserCircle,
+  PackageSearch 
 } from 'lucide-react';
 
 const Dashboard = ({ onLogout }) => {
@@ -35,9 +37,9 @@ const Dashboard = ({ onLogout }) => {
     localStorage.removeItem('user');
     navigate('/login');
   };
-
   const tabs = [
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'inventory', label: 'Inventory', icon: PackageSearch },
     { id: 'qr', label: 'QR Codes', icon: QrCode },
     { id: 'menu', label: 'Menu', icon: Coffee },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
@@ -152,6 +154,7 @@ const Dashboard = ({ onLogout }) => {
         {/* Component Rendering */}
         <div className="bg-white rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-slate-100 p-6 min-h-[500px]">
           {activeTab === 'analytics' && <Analytics />}
+          {activeTab === 'inventory' && <Inventory />}
           {activeTab === 'qr' && <QRGenerator />}
           {activeTab === 'menu' && <MenuManagement />}
           {activeTab === 'orders' && <OrderHistory />}

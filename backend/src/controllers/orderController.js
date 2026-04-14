@@ -134,11 +134,7 @@ exports.updateOrderStatus = async (req, res) => {
       });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true, runValidators: true }
-    );
+    let order = await Order.findById(req.params.id);
 
     if (!order) {
       return res.status(404).json({
@@ -146,6 +142,29 @@ exports.updateOrderStatus = async (req, res) => {
         message: 'Order not found'
       });
     }
+
+    order.status = status;
+
+    // Deduct inventory when order is Served
+    if (status === 'Served' && !order.ingredientsDeducted) {
+      const Ingredient = require('../models/Ingredient');
+      
+      for (const item of order.items) {
+        const menuItem = await MenuItem.findById(item.menuItem);
+        if (menuItem && menuItem.recipe && menuItem.recipe.length > 0) {
+          for (const recipeItem of menuItem.recipe) {
+            const deductionAmount = recipeItem.amount * item.quantity;
+            await Ingredient.findByIdAndUpdate(
+              recipeItem.ingredient,
+              { $inc: { currentStock: -deductionAmount } }
+            );
+          }
+        }
+      }
+      order.ingredientsDeducted = true;
+    }
+
+    await order.save();
 
     res.status(200).json({
       success: true,

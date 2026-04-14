@@ -13,7 +13,7 @@ import {
   Legend,
   Filler
 } from 'chart.js';
-import { getRevenueAnalytics, getPopularItems, getPeakHours, getTableOrders } from '../services/api';
+import { getRevenueAnalytics, getPopularItems, getPeakHours, getTableOrders, getIngredientAnalytics } from '../services/api';
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -23,7 +23,8 @@ import {
   Trophy, 
   Utensils,
   Loader2,
-  DollarSign
+  DollarSign,
+  PackageSearch
 } from 'lucide-react';
 
 // Register ChartJS components
@@ -49,6 +50,7 @@ const Analytics = () => {
   const [popularItems, setPopularItems] = useState([]);
   const [peakHours, setPeakHours] = useState([]);
   const [tableOrders, setTableOrders] = useState([]);
+  const [ingredientStats, setIngredientStats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -58,17 +60,19 @@ const Analytics = () => {
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      const [revenueData, itemsData, hoursData, tablesData] = await Promise.all([
+      const [revenueData, itemsData, hoursData, tablesData, ingredientsData] = await Promise.all([
         getRevenueAnalytics(),
         getPopularItems(),
         getPeakHours(),
-        getTableOrders()
+        getTableOrders(),
+        getIngredientAnalytics(30)
       ]);
 
       setRevenue(revenueData.data);
       setPopularItems(itemsData.data || []);
       setPeakHours(hoursData.data || []);
       setTableOrders(tablesData.data || []);
+      setIngredientStats(ingredientsData.data || []);
     } catch (error) {
       console.error('Error loading analytics:', error);
     } finally {
@@ -152,6 +156,25 @@ const Analytics = () => {
         pointRadius: 4,
         pointHoverRadius: 6,
       },
+    ],
+  };
+
+  // Ingredient Forecast Chart Data
+  const ingredientForecastChart = {
+    labels: ingredientStats.slice(0, 10).map(item => item.name),
+    datasets: [
+      {
+        label: 'Current Stock',
+        data: ingredientStats.slice(0, 10).map(item => item.currentStock),
+        backgroundColor: '#cbd5e1', // Slate 300
+        borderRadius: 4,
+      },
+      {
+        label: 'Predicted 7-Day Need',
+        data: ingredientStats.slice(0, 10).map(item => item.weeklyForecast),
+        backgroundColor: '#f43f5e', // Rose 500
+        borderRadius: 4,
+      }
     ],
   };
 
@@ -286,6 +309,24 @@ const Analytics = () => {
               <div className="flex flex-col items-center justify-center h-full text-slate-400">
                 <PieChart className="w-8 h-8 mb-2 opacity-20" />
                 <p className="text-sm font-medium">Not enough data to display</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Ingredient Forecasting Chart */}
+        <div className="bg-white rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] border border-slate-200 p-6 lg:col-span-2">
+          <div className="flex items-center gap-2 mb-6">
+            <PackageSearch className="w-5 h-5 text-rose-500" />
+            <h3 className="text-lg font-bold text-slate-900">Inventory Supply vs 7-Day Projected Demand</h3>
+          </div>
+          <div className="h-[300px] w-full">
+            {ingredientStats.length > 0 ? (
+              <Bar data={ingredientForecastChart} options={axisOptions} />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                <PackageSearch className="w-8 h-8 mb-2 opacity-20" />
+                <p className="text-sm font-medium">Not enough ingredient usage data yet</p>
               </div>
             )}
           </div>

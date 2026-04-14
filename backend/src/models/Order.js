@@ -36,6 +36,10 @@ const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
     unique: true
+  },
+  ingredientsDeducted: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 
