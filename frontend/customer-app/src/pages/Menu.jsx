@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getMenuItems } from '../services/api';
 import { 
   Search, 
@@ -38,9 +38,21 @@ const Menu = () => {
     'Desserts': Cake
   };
 
+  const location = useLocation();
+
   useEffect(() => {
     fetchMenu();
-  }, []);
+    
+    // Smart Table Detection
+    const params = new URLSearchParams(location.search);
+    const tableParam = params.get('table');
+    if (tableParam) {
+      localStorage.setItem('tableNumber', tableParam);
+    } else if (!localStorage.getItem('tableNumber')) {
+      // Default to Table 1 for viva demo if nothing is found
+      localStorage.setItem('tableNumber', '1');
+    }
+  }, [location]);
 
   useEffect(() => {
     let items = menuItems;
@@ -114,7 +126,7 @@ const Menu = () => {
     navigate('/checkout', { state: { cart } });
   };
 
-  const tableNumber = localStorage.getItem('tableNumber') || 'Guest';
+  const tableNumber = localStorage.getItem('tableNumber') || '1';
 
   // ----------------------------------------
   // LOADER STATE

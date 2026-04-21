@@ -10,6 +10,9 @@ require('dotenv').config();
 
 const app = express();
 
+// Trust the Load Balancer (required for AWS ALB)
+app.set('trust proxy', 1);
+
 // ============ CORS FIX - MUST BE FIRST ============
 // Enable CORS for all origins in development
 app.use((req, res, next) => {
@@ -40,7 +43,7 @@ app.use(mongoSanitize());
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 100,
+  max: 1000,
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,

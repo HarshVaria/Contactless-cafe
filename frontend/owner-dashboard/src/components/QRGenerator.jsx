@@ -1,242 +1,168 @@
 import { useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { QrCode, Download, Printer, Maximize2, X, Link as LinkIcon, Settings2 } from 'lucide-react';
+import { QrCode, Download, Printer, Maximize2, X, Link as LinkIcon, Info } from 'lucide-react';
 
 const QRGenerator = () => {
-  const [numberOfTables, setNumberOfTables] = useState(10);
-  const [selectedTable, setSelectedTable] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
 
-  // Base URL - This will be your deployed app URL (for now localhost)
-  const BASE_URL = 'http://localhost:5173';
+  // Base URL - Pointing to the customer app dynamically
+  const BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
 
-  const generateQRValue = (tableNumber) => {
-    return `${BASE_URL}?table=${tableNumber}`;
-  };
-
-  const downloadQR = (tableNumber) => {
-    const canvas = document.getElementById(`qr-${tableNumber}`);
+  const downloadQR = () => {
+    const canvas = document.getElementById('master-qr');
     if (canvas) {
       const url = canvas.toDataURL('image/png');
       const link = document.createElement('a');
-      link.download = `Table-${tableNumber}-QR.png`;
+      link.download = 'Master-Cafe-QR.png';
       link.href = url;
       link.click();
     }
   };
 
-  const downloadAllQRs = () => {
-    for (let i = 1; i <= numberOfTables; i++) {
-      setTimeout(() => downloadQR(i), i * 200);
-    }
-  };
-
-  const printQR = (tableNumber) => {
-    const canvas = document.getElementById(`qr-${tableNumber}`);
+  const printQR = () => {
+    const canvas = document.getElementById('master-qr');
     if (canvas) {
       const win = window.open('', '_blank');
       win.document.write(`
         <html>
           <head>
-            <title>Table ${tableNumber} QR Code</title>
+            <title>Master Cafe QR Code</title>
             <style>
               body { 
-                display: flex; 
-                flex-direction: column;
-                justify-content: center; 
-                align-items: center; 
-                height: 100vh;
-                margin: 0;
-                font-family: system-ui, -apple-system, sans-serif;
-                background-color: white;
+                display: flex; flex-direction: column; justify-content: center; align-items: center; 
+                height: 100vh; margin: 0; font-family: system-ui; background-color: white;
               }
-              .container {
-                text-align: center;
-                padding: 40px;
-                border: 2px dashed #cbd5e1;
-                border-radius: 24px;
-              }
-              h1 { margin: 0 0 24px 0; color: #0f172a; font-size: 32px; }
-              img { border-radius: 12px; }
-              p { margin-top: 24px; font-size: 16px; color: #64748b; font-weight: 500; }
+              .container { text-align: center; padding: 60px; border: 4px solid #4f46e5; border-radius: 40px; }
+              h1 { margin: 0 0 10px 0; color: #1e293b; font-size: 48px; }
+              h2 { margin: 0 0 40px 0; color: #4f46e5; font-size: 24px; opacity: 0.8; }
+              img { border-radius: 20px; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); }
+              p { margin-top: 40px; font-size: 20px; color: #64748b; font-weight: 600; }
             </style>
           </head>
           <body>
             <div class="container">
-              <h1>Table ${tableNumber}</h1>
-              <img src="${canvas.toDataURL()}" style="width: 250px; height: 250px;" />
-              <p>Scan to view menu & order</p>
+              <h1>Brew & Bites</h1>
+              <h2>Scan to Order</h2>
+              <img src="${canvas.toDataURL()}" style="width: 400px; height: 400px;" />
+              <p>Direct Access to Digital Menu</p>
             </div>
           </body>
         </html>
       `);
       win.document.close();
-      setTimeout(() => win.print(), 250); // Small delay to ensure image renders before print dialog
+      setTimeout(() => win.print(), 250);
     }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-100">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <QrCode className="w-6 h-6 text-indigo-600" />
-            Table QR Generator
-          </h2>
-          <p className="text-sm text-slate-500 mt-1">Generate and manage scannable menus for your tables</p>
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-100 rounded-2xl mb-2">
+          <QrCode className="w-8 h-8 text-indigo-600" />
         </div>
-        
-        <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
-          <Settings2 className="w-4 h-4 text-slate-400 ml-2" />
-          <label className="text-sm font-semibold text-slate-700">Total Tables:</label>
-          <input
-            type="number"
-            min="1"
-            max="100"
-            value={numberOfTables}
-            onChange={(e) => setNumberOfTables(parseInt(e.target.value) || 1)}
-            className="w-20 px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 font-semibold text-center transition-all"
-          />
-        </div>
+        <h2 className="text-3xl font-black text-slate-900">Master QR Generator</h2>
+        <p className="text-slate-500 max-w-md mx-auto">
+          Generate a single high-quality QR code for your entire cafe. Customers can scan this to view the menu instantly.
+        </p>
       </div>
 
-      {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
-        <div className="flex items-center gap-2 text-sm text-slate-600">
-          <LinkIcon className="w-4 h-4 text-indigo-400" />
-          <span>Base routing URL:</span>
-          <code className="bg-white px-2 py-1 rounded-md border border-slate-200 text-indigo-600 font-mono text-xs">
-            {BASE_URL}
-          </code>
-        </div>
-        <button
-          onClick={downloadAllQRs}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md"
-        >
-          <Download className="w-4 h-4" />
-          Download All
-        </button>
-      </div>
-
-      {/* QR Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {Array.from({ length: numberOfTables }, (_, i) => i + 1).map((tableNumber) => (
-          <div 
-            key={tableNumber} 
-            className="group bg-white rounded-xl p-4 text-center border border-slate-200 hover:border-indigo-300 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300"
-          >
-            <h3 className="text-sm font-bold text-slate-700 mb-3">Table {tableNumber}</h3>
-            
-            {/* QR Canvas Wrapper */}
+      {/* Main QR Card */}
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2">
+          {/* Visual QR Side */}
+          <div className="p-8 md:p-12 bg-slate-50 border-r border-slate-200 flex flex-col items-center justify-center">
             <div 
-              className="bg-slate-50 p-3 rounded-xl inline-block mb-4 border border-slate-100 cursor-pointer group-hover:scale-105 transition-transform duration-300"
-              onClick={() => setSelectedTable(tableNumber)}
-              title="Click to preview"
+              className="bg-white p-6 rounded-3xl shadow-2xl shadow-indigo-500/10 cursor-pointer hover:scale-105 transition-transform"
+              onClick={() => setShowPreview(true)}
             >
               <QRCodeCanvas
-                id={`qr-${tableNumber}`}
-                value={generateQRValue(tableNumber)}
-                size={120}
-                level="H"
-                includeMargin={false}
-                className="rounded-md"
-              />
-            </div>
-
-            {/* Subtle Action Row instead of heavy stacked buttons */}
-            <div className="flex justify-center gap-2 border-t border-slate-100 pt-3">
-              <button
-                onClick={() => downloadQR(tableNumber)}
-                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                title="Download"
-              >
-                <Download className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => printQR(tableNumber)}
-                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                title="Print"
-              >
-                <Printer className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setSelectedTable(tableNumber)}
-                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                title="Preview"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Preview Modal (Glassmorphism) */}
-      {selectedTable && (
-        <div 
-          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in" 
-          onClick={() => setSelectedTable(null)}
-        >
-          <div 
-            className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl border border-white/20 transform transition-all" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold text-slate-900">Table {selectedTable}</h3>
-              <button 
-                onClick={() => setSelectedTable(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="bg-slate-50 p-6 rounded-2xl mb-6 border border-slate-100 flex justify-center shadow-inner">
-              <QRCodeCanvas
-                value={generateQRValue(selectedTable)}
-                size={200}
+                id="master-qr"
+                value={BASE_URL}
+                size={240}
                 level="H"
                 includeMargin={false}
                 className="rounded-xl"
               />
             </div>
-            
-            <div className="bg-slate-50 rounded-lg p-3 flex items-center gap-3 mb-6 border border-slate-100 overflow-hidden">
-              <LinkIcon className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <p className="text-xs text-slate-600 font-mono truncate">
-                {generateQRValue(selectedTable)}
-              </p>
+            <div className="mt-8 flex items-center gap-3 bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+              <LinkIcon className="w-4 h-4 text-indigo-500" />
+              <code className="text-xs font-mono font-bold text-slate-600">
+                {BASE_URL}
+              </code>
+            </div>
+          </div>
+
+          {/* Controls Side */}
+          <div className="p-8 md:p-12 flex flex-col justify-center space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold text-slate-900">QR Code Settings</h3>
+              <div className="p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 flex items-start gap-3">
+                <Info className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+                <p className="text-sm text-indigo-900/70 leading-relaxed font-medium">
+                  This QR code points to your customer application. It is optimized for mobile scanning and will automatically direct users to your menu.
+                </p>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-3">
               <button
-                onClick={() => downloadQR(selectedTable)}
-                className="flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-4 py-3 rounded-xl font-semibold transition-colors"
+                onClick={printQR}
+                className="w-full flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-600/20"
               >
-                <Download className="w-4 h-4" />
-                Download
+                <Printer className="w-5 h-5" />
+                Print Big Poster
               </button>
               <button
-                onClick={() => printQR(selectedTable)}
-                className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-xl font-semibold transition-colors shadow-sm"
+                onClick={downloadQR}
+                className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:border-indigo-600 hover:text-indigo-600 text-slate-700 px-6 py-4 rounded-2xl font-bold transition-all"
               >
-                <Printer className="w-4 h-4" />
-                Print
+                <Download className="w-5 h-5" />
+                Download Image
               </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: scale(0.95); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out forwards;
-        }
-      `}</style>
+      {/* Preview Modal */}
+      {showPreview && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4" 
+          onClick={() => setShowPreview(false)}
+        >
+          <div 
+            className="bg-white rounded-[40px] p-10 max-w-lg w-full shadow-2xl relative" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setShowPreview(false)}
+              className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-black text-slate-900">Brew & Bites</h3>
+              <p className="text-indigo-600 font-bold">Standard Customer QR</p>
+            </div>
+
+            <div className="bg-slate-50 p-10 rounded-[32px] mb-8 border border-slate-100 flex justify-center shadow-inner">
+              <QRCodeCanvas
+                value={BASE_URL}
+                size={300}
+                level="H"
+                includeMargin={false}
+                className="rounded-2xl"
+              />
+            </div>
+            
+            <p className="text-center text-slate-400 text-sm font-medium">
+              Click outside to close preview
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

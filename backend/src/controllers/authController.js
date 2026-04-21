@@ -120,3 +120,83 @@ exports.getMe = async (req, res) => {
     });
   }
 };
+
+// @desc    Update Kitchen Availability Status
+// @route   PUT /api/auth/status
+// @access  Private (Kitchen only)
+exports.updateKitchenStatus = async (req, res) => {
+  try {
+    const { isAvailable } = req.body;
+    
+    if (req.user.role !== 'kitchen') {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { isAvailable },
+      { new: true }
+    ).select('-password');
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get Kitchen Availability Status
+// @route   GET /api/auth/kitchen-status
+// @access  Private
+exports.getKitchenStatus = async (req, res) => {
+  try {
+    const kitchenUsers = await User.find({ role: 'kitchen' }).select('username isAvailable');
+    // If any kitchen user is available, consider the kitchen available
+    const isKitchenAvailable = kitchenUsers.some(user => user.isAvailable);
+
+    res.status(200).json({
+      success: true,
+      isAvailable: isKitchenAvailable,
+      data: kitchenUsers
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get All Kitchen Users (Owner Only)
+// @route   GET /api/auth/kitchen-users
+// @access  Private (Owner only)
+exports.getKitchenUsers = async (req, res) => {
+  try {
+    // Check if the user is an owner
+    if (req.user.role !== 'owner') {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to access this route'
+      });
+    }
+
+    const kitchenUsers = await User.find({ role: 'kitchen' })
+      .select('-password')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: kitchenUsers
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
