@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { recordVisit } from '../services/api';
 import { 
   Store, 
@@ -14,6 +14,7 @@ import {
 const TableNumber = () => {
   const [tableNumber, setTableNumber] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Record a visit as soon as the app loads on a customer's phone
@@ -22,7 +23,14 @@ const TableNumber = () => {
       recordVisit();
       sessionStorage.setItem('visitRecorded', 'true');
     }
-  }, []);
+
+    // Auto-fill from URL if present
+    const params = new URLSearchParams(location.search);
+    const tableParam = params.get('table');
+    if (tableParam) {
+      setTableNumber(tableParam);
+    }
+  }, [location.search]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

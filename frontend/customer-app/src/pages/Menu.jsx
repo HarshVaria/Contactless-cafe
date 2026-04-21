@@ -49,10 +49,10 @@ const Menu = () => {
     if (tableParam) {
       localStorage.setItem('tableNumber', tableParam);
     } else if (!localStorage.getItem('tableNumber')) {
-      // Default to Table 1 for viva demo if nothing is found
-      localStorage.setItem('tableNumber', '1');
+      // Force redirect to table selection if no table is found
+      navigate('/');
     }
-  }, [location]);
+  }, [location, navigate]);
 
   useEffect(() => {
     let items = menuItems;
